@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"upobir/goriber-drive-v2/internal/web"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -19,7 +20,7 @@ import (
 const (
 	addr         = ":8080"
 	publicDir    = "./public"
-	uploadDir    = "./storage"
+	storageDir   = "./storage"
 	maxUploadMB  = 50
 	readTimeout  = 10 * time.Second
 	writeTimeout = 30 * time.Second
@@ -27,28 +28,8 @@ const (
 	dbUrl        = "file:data.db?_pragma=busy_timeout(5000)"
 )
 
-func corsSimple(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Vary", "Origin")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-		}
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
 func main() {
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
-		log.Fatal(err)
-	}
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+	if err := os.MkdirAll(storageDir, 0755); err != nil {
 		log.Fatal(err)
 	}
 
@@ -67,12 +48,17 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID, middleware.RealIP, middleware.Logger, middleware.Recoverer)
-	r.Use(corsSimple)
+	r.Use(web.CorsSimple)
 
-	// Health
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
+	r.Route("/api/v1/files", func(r chi.Router) {
+		r.Post("/", web.UploadHandler(db, storageDir))
+	})
+
+	r.Get("/download/{id}", web.DownloadHandler(db, storageDir))
 
 	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
 
@@ -96,7 +82,6 @@ func main() {
 		IdleTimeout:  idleTimeout,
 	}
 
-	// graceful shutdown
 	go func() {
 		log.Printf("HTTP server listening at %s", addr)
 		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
