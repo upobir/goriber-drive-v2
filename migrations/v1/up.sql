@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS files (
+    id         TEXT PRIMARY KEY,
+    name       TEXT        NOT NULL,
+    size       INTEGER     NOT NULL,
+    created_at DATETIME    NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    updated_at DATETIME    NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+    deleted_at DATETIME    DEFAULT NULL
+);
+
+
+CREATE TRIGGER IF NOT EXISTS trg_files_updated_at
+AFTER UPDATE ON files
+FOR EACH ROW
+BEGIN
+    UPDATE files SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
