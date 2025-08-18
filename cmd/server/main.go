@@ -18,10 +18,9 @@ import (
 )
 
 const (
-	addr         = ":8080"
+	addr         = ":3333"
 	publicDir    = "./public"
 	storageDir   = "./storage"
-	maxUploadMB  = 50
 	readTimeout  = 10 * time.Second
 	writeTimeout = 30 * time.Second
 	idleTimeout  = 60 * time.Second

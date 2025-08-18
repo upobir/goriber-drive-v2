@@ -1,11 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Goriber Drive v2</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>Goriber Drive v2</header>
+
+    <div class="main-container">
+      <!-- <div
+        class="upload-area"
+        onclick="document.getElementById('fileInput').click()"
+      >
+        Drag & Drop files here or click to browse
+        <input type="file" id="fileInput" hidden multiple />
+      </div> -->
+
+      <!-- <div class="file-list-section"></div> -->
+
+      <div class="file-list-section">
+        <div class="file-list-header">Available Files</div>
+        <template id="no-available-files-text">
+          <div class="no-file-text">No files available.</div>
+        </template>
+        <div class="file-list">
+          <template id="available-file-row">
+            <div class="file-row" data-file-id="id">
+              <div class="file-info">
+                <div>📁</div>
+                <!-- <input type="checkbox" class="file-checkbox" /> -->
+                <div>
+                  <div class="file-name">Name</div>
+                  <div class="file-size">Size</div>
+                </div>
+              </div>
+              <div class="file-actions">
+                <button
+                  class="download-button"
+                  data-download-url="downloadUrl"
+                  onClick="downloadFile(this.dataset.downloadUrl)"
+                >
+                  <svg
+                    width="20px"
+                    height="20px"
+                    fill="#000000"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M7.293,13.707a1,1,0,1,1,1.414-1.414L11,14.586V3a1,1,0,0,1,2,0V14.586l2.293-2.293a1,1,0,0,1,1.414,1.414l-4,4a1,1,0,0,1-.325.216.986.986,0,0,1-.764,0,1,1,0,0,1-.325-.216ZM22,12a1,1,0,0,0-1,1v7H3V13a1,1,0,0,0-2,0v8a1,1,0,0,0,1,1H22a1,1,0,0,0,1-1V13A1,1,0,0,0,22,12Z"
+                      ></path>
+                    </g>
+                  </svg>
+                </button>
+                <button
+                  class="delete-button"
+                  data-file-id="id"
+                  onclick="deleteFile(this.dataset.fileId)"
+                >
+                  <svg
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M10 12V17"
+                        stroke="#000000"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                      <path
+                        d="M14 12V17"
+                        stroke="#000000"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                      <path
+                        d="M4 7H20"
+                        stroke="#000000"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                      <path
+                        d="M6 10V18C6 19.6569 7.34315 21 9 21H15C16.6569 21 18 19.6569 18 18V10"
+                        stroke="#000000"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                      <path
+                        d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"
+                        stroke="#000000"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                    </g>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="available-file-actions">
+          <div class="storage-info">Storage Used: <span>0 MB</span></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>
