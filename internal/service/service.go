@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -33,6 +34,17 @@ var (
 	ErrDiskWriteFailure = errors.New("failed to write to disk")
 )
 
+func fromDB(f data.DbFile) File {
+	return File{
+		ID:        f.ID,
+		Name:      f.Name,
+		Size:      f.Size,
+		CreatedAt: f.CreatedAt,
+		UpdatedAt: f.UpdatedAt,
+		DeletedAt: f.DeletedAt,
+	}
+}
+
 func SaveFile(db *sql.DB, storageDir string, file io.Reader, name string) (*File, error) {
 	id := uuid.NewString()
 	storedPath := filepath.Join(storageDir, id)
@@ -54,14 +66,8 @@ func SaveFile(db *sql.DB, storageDir string, file io.Reader, name string) (*File
 		return nil, ErrUnknownDbError
 	}
 
-	return &File{
-		ID:        dbFile.ID,
-		Name:      dbFile.Name,
-		Size:      dbFile.Size,
-		CreatedAt: dbFile.CreatedAt,
-		UpdatedAt: dbFile.UpdatedAt,
-		DeletedAt: dbFile.DeletedAt,
-	}, nil
+	fileModel := fromDB(*dbFile)
+	return &fileModel, nil
 }
 
 func GetFileWithOsFileById(db *sql.DB, storageDir string, id string) (*FileWithOsFile, error) {
@@ -73,14 +79,7 @@ func GetFileWithOsFileById(db *sql.DB, storageDir string, id string) (*FileWithO
 		return nil, ErrNotFoundInDB
 	}
 
-	file := File{
-		ID:        dbFile.ID,
-		Name:      dbFile.Name,
-		Size:      dbFile.Size,
-		CreatedAt: dbFile.CreatedAt,
-		UpdatedAt: dbFile.UpdatedAt,
-		DeletedAt: dbFile.DeletedAt,
-	}
+	file := fromDB(*dbFile)
 
 	path := filepath.Join(storageDir, id)
 	osFile, err := os.Open(path)
@@ -92,4 +91,38 @@ func GetFileWithOsFileById(db *sql.DB, storageDir string, id string) (*FileWithO
 		File:   file,
 		OsFile: osFile,
 	}, nil
+}
+
+func GetAllFiles(db *sql.DB, storageDir string) ([]File, error) {
+	dbFiles, err := data.GetAllExistingFiles(db)
+	if err != nil {
+		fmt.Println("error: ", err)
+		return nil, ErrUnknownDbError
+	}
+
+	result := []File{}
+	for _, f := range dbFiles {
+		result = append(result, fromDB(f))
+	}
+
+	return result, nil
+}
+
+func DeleteFile(db *sql.DB, storageDir string, id string) error {
+	deleted, err := data.DeleteExistingFile(db, id)
+	if err != nil {
+		fmt.Println("error: ", err)
+		return ErrUnknownDbError
+	}
+
+	if !deleted {
+		return ErrNotFoundInDB
+	}
+
+	path := filepath.Join(storageDir, id)
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return ErrDiskWriteFailure
+	}
+
+	return nil
 }

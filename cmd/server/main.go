@@ -39,10 +39,6 @@ func main() {
 	}
 	defer db.Close()
 
-	// if err := initSchema(db); err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	// hub := newHub()
 	// go hub.run()
 
@@ -55,21 +51,14 @@ func main() {
 	})
 
 	r.Route("/api/v1/files", func(r chi.Router) {
+		r.Get("/", web.GetAllFiles(db, storageDir))
 		r.Post("/", web.UploadHandler(db, storageDir))
+		r.Delete("/{id}", web.DeleteFile(db, storageDir))
 	})
 
 	r.Get("/download/{id}", web.DownloadHandler(db, storageDir))
 
 	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
-
-	// r.Route("/api", func(api chi.Router) {
-	// 	api.Get("/notes", listNotes(db))
-	// 	api.Post("/notes", createNote(db, hub))
-
-	// 	api.Post("/upload", uploadFile(db, hub))
-	// 	api.Get("/files", listFiles(db))
-	// 	api.Get("/files/{stored}", downloadFile(db)) // download by stored filename
-	// })
 
 	// WebSocket for realtime events
 	// r.Get("/ws", wsHandler(hub))
