@@ -65,7 +65,7 @@
                 <button
                   class="delete-button"
                   data-file-id="id"
-                  onclick="deleteFile(this.dataset.fileId)"
+                  onclick="askDeleteConfirmation(this.dataset.fileId)"
                 >
                   <svg
                     width="20px"
@@ -125,6 +125,31 @@
         </div>
         <div class="available-file-actions">
           <div class="storage-info">Storage Used: <span>0 MB</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal"
+      id="delete-confirm-modal"
+      onclick="closeModal('delete-confirm-modal')"
+    >
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>
+          Are you sure you want to delete
+          <span id="delete-file-name">name</span>?
+        </h3>
+        <div class="modal-buttons">
+          <button class="cancel" onclick="closeModal('delete-confirm-modal')">
+            Cancel
+          </button>
+          <button
+            class="confirm"
+            data-file-id="id"
+            onclick="confirmDelete(this.dataset.fileId)"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>

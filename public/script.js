@@ -70,6 +70,27 @@ const downloadFile = (downloadUrl) => {
   document.body.removeChild(a);
 };
 
+const askDeleteConfirmation = (fileId) => {
+  const modal = document.getElementById("delete-confirm-modal");
+  const confirmButton = modal.querySelector(".confirm");
+  const fileNameSpan = modal.querySelector("#delete-file-name");
+  fileNameSpan.textContent = state.files.find(
+    (file) => file.id === fileId
+  ).name;
+  confirmButton.dataset.fileId = fileId;
+  modal.classList.add("show");
+};
+
+const closeModal = (modalId) => {
+  const modal = document.getElementById(modalId);
+  modal.classList.remove("show");
+};
+
+const confirmDelete = (fileId) => {
+  deleteFile(fileId);
+  closeModal("delete-confirm-modal");
+};
+
 const deleteFile = (fileId) => {
   fetch(`/api/v1/files/${fileId}`, {
     method: "DELETE",
