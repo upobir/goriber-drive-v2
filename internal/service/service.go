@@ -1,7 +1,6 @@
 package service
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -45,9 +44,9 @@ func fromDB(f data.DbFile) File {
 	}
 }
 
-func SaveFile(db *sql.DB, storageDir string, file io.Reader, name string) (*File, error) {
+func SaveFile(dependencies Dependencies, file io.Reader, name string) (*File, error) {
 	id := uuid.NewString()
-	storedPath := filepath.Join(storageDir, id)
+	storedPath := filepath.Join(dependencies.StorageDir, id)
 
 	dst, err := os.Create(storedPath)
 	if err != nil {
@@ -61,17 +60,21 @@ func SaveFile(db *sql.DB, storageDir string, file io.Reader, name string) (*File
 
 	dst.Close()
 
-	dbFile, err := data.CreateFile(db, id, name, size)
+	dbFile, err := data.CreateFile(dependencies.Db, id, name, size)
 	if err != nil {
 		return nil, ErrUnknownDbError
 	}
 
 	fileModel := fromDB(*dbFile)
+	dependencies.Broadcaster.Broadcast(Event{
+		Type:    EventFileCreated,
+		Payload: fileModel,
+	})
 	return &fileModel, nil
 }
 
-func GetFileWithOsFileById(db *sql.DB, storageDir string, id string) (*FileWithOsFile, error) {
-	dbFile, err := data.GetExistingFileById(db, id)
+func GetFileWithOsFileById(dependencies Dependencies, id string) (*FileWithOsFile, error) {
+	dbFile, err := data.GetExistingFileById(dependencies.Db, id)
 	if err != nil {
 		return nil, ErrUnknownDbError
 	}
@@ -81,7 +84,7 @@ func GetFileWithOsFileById(db *sql.DB, storageDir string, id string) (*FileWithO
 
 	file := fromDB(*dbFile)
 
-	path := filepath.Join(storageDir, id)
+	path := filepath.Join(dependencies.StorageDir, id)
 	osFile, err := os.Open(path)
 	if err != nil {
 		return nil, ErrNotFoundInDisk
@@ -93,8 +96,8 @@ func GetFileWithOsFileById(db *sql.DB, storageDir string, id string) (*FileWithO
 	}, nil
 }
 
-func GetAllFiles(db *sql.DB, storageDir string) ([]File, error) {
-	dbFiles, err := data.GetAllExistingFiles(db)
+func GetAllFiles(dependencies Dependencies) ([]File, error) {
+	dbFiles, err := data.GetAllExistingFiles(dependencies.Db)
 	if err != nil {
 		fmt.Println("error: ", err)
 		return nil, ErrUnknownDbError
@@ -108,8 +111,8 @@ func GetAllFiles(db *sql.DB, storageDir string) ([]File, error) {
 	return result, nil
 }
 
-func DeleteFile(db *sql.DB, storageDir string, id string) error {
-	deleted, err := data.DeleteExistingFile(db, id)
+func DeleteFile(dependencies Dependencies, id string) error {
+	deleted, err := data.DeleteExistingFile(dependencies.Db, id)
 	if err != nil {
 		fmt.Println("error: ", err)
 		return ErrUnknownDbError
@@ -119,10 +122,15 @@ func DeleteFile(db *sql.DB, storageDir string, id string) error {
 		return ErrNotFoundInDB
 	}
 
-	path := filepath.Join(storageDir, id)
+	path := filepath.Join(dependencies.StorageDir, id)
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return ErrDiskWriteFailure
 	}
+
+	dependencies.Broadcaster.Broadcast(Event{
+		Type:    EventFileDeleted,
+		Payload: id,
+	})
 
 	return nil
 }

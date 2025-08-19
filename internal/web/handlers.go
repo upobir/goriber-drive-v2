@@ -1,7 +1,6 @@
 package web
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -56,7 +55,7 @@ func CorsSimple(next http.Handler) http.Handler {
 	})
 }
 
-func UploadHandler(db *sql.DB, storageDir string) http.HandlerFunc {
+func UploadHandler(dependencies service.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, MaxFileSize)
 
@@ -74,7 +73,7 @@ func UploadHandler(db *sql.DB, storageDir string) http.HandlerFunc {
 		defer file.Close()
 		name := header.Filename
 
-		fileModel, err := service.SaveFile(db, storageDir, file, name)
+		fileModel, err := service.SaveFile(dependencies, file, name)
 		if err != nil {
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 			return
@@ -86,11 +85,11 @@ func UploadHandler(db *sql.DB, storageDir string) http.HandlerFunc {
 	}
 }
 
-func DownloadHandler(db *sql.DB, storageDir string) http.HandlerFunc {
+func DownloadHandler(dependencies service.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
-		file, err := service.GetFileWithOsFileById(db, storageDir, id)
+		file, err := service.GetFileWithOsFileById(dependencies, id)
 		switch {
 		case errors.Is(err, service.ErrNotFoundInDB):
 			http.Error(w, "not found", http.StatusNotFound)
@@ -112,9 +111,9 @@ func DownloadHandler(db *sql.DB, storageDir string) http.HandlerFunc {
 	}
 }
 
-func GetAllFiles(db *sql.DB, storageDir string) http.HandlerFunc {
+func GetAllFiles(dependencies service.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		files, err := service.GetAllFiles(db, storageDir)
+		files, err := service.GetAllFiles(dependencies)
 		if err != nil {
 			http.Error(w, "seomthing went wrong", http.StatusInternalServerError)
 			return
@@ -129,11 +128,11 @@ func GetAllFiles(db *sql.DB, storageDir string) http.HandlerFunc {
 	}
 }
 
-func DeleteFile(db *sql.DB, storageDir string) http.HandlerFunc {
+func DeleteFile(dependencies service.Dependencies) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
-		err := service.DeleteFile(db, storageDir, id)
+		err := service.DeleteFile(dependencies, id)
 		switch {
 		case errors.Is(err, service.ErrNotFoundInDB):
 			http.Error(w, "not found", http.StatusNotFound)

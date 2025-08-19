@@ -10,11 +10,12 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"upobir/goriber-drive-v2/internal/service"
 	"upobir/goriber-drive-v2/internal/web"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	_ "modernc.org/sqlite" // CGO-free SQLite
+	_ "modernc.org/sqlite"
 )
 
 const (
@@ -38,8 +39,13 @@ func main() {
 	}
 	defer db.Close()
 
-	// hub := newHub()
-	// go hub.run()
+	hub := web.NewHub()
+
+	dependencies := service.Dependencies{
+		StorageDir:  storageDir,
+		Db:          db,
+		Broadcaster: &web.HubBroadcaster{Hub: hub},
+	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID, middleware.RealIP, middleware.Logger, middleware.Recoverer)
@@ -50,17 +56,16 @@ func main() {
 	})
 
 	r.Route("/api/v1/files", func(r chi.Router) {
-		r.Get("/", web.GetAllFiles(db, storageDir))
-		r.Post("/", web.UploadHandler(db, storageDir))
-		r.Delete("/{id}", web.DeleteFile(db, storageDir))
+		r.Get("/", web.GetAllFiles(dependencies))
+		r.Post("/", web.UploadHandler(dependencies))
+		r.Delete("/{id}", web.DeleteFile(dependencies))
 	})
 
-	r.Get("/download/{id}", web.DownloadHandler(db, storageDir))
+	r.Get("/download/{id}", web.DownloadHandler(dependencies))
+
+	r.Get("/ws", web.ServeWS(hub))
 
 	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(publicDir))))
-
-	// WebSocket for realtime events
-	// r.Get("/ws", wsHandler(hub))
 
 	srv := &http.Server{
 		Addr:         addr,
@@ -70,6 +75,11 @@ func main() {
 		IdleTimeout:  idleTimeout,
 	}
 
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	go hub.Run(ctx)
+
 	go func() {
 		log.Printf("HTTP server listening at %s", addr)
 		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
@@ -77,11 +87,12 @@ func main() {
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	_ = srv.Shutdown(ctx)
+	<-ctx.Done()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	_ = srv.Shutdown(shutdownCtx)
+
 	log.Println("bye")
+
 }
