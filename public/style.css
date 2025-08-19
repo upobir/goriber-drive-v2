@@ -64,6 +64,14 @@ header {
   min-height: 35px;
 }
 
+.upload-file-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 35px;
+}
+
 .storage-info {
   font-size: 14px;
   color: #666;
