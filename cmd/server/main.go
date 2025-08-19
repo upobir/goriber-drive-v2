@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +21,7 @@ import (
 )
 
 const (
-	addr         = ":3333"
+	// defaultAddr  = ":3333"
 	publicDir    = "./public"
 	storageDir   = "./storage"
 	readTimeout  = 10 * time.Second
@@ -29,6 +31,11 @@ const (
 )
 
 func main() {
+	port := flag.String("port", "3333", "Port to listen on (overrides default)")
+	flag.Parse()
+
+	addr := fmt.Sprintf(":%s", *port)
+
 	if err := os.MkdirAll(storageDir, 0755); err != nil {
 		log.Fatal(err)
 	}
@@ -94,5 +101,4 @@ func main() {
 	_ = srv.Shutdown(shutdownCtx)
 
 	log.Println("bye")
-
 }
