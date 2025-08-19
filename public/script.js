@@ -103,6 +103,7 @@ const renderDraftFiles = () => {
         file.size
       );
       fileRow.querySelector(".delete-button").dataset.fileId = file.id;
+      fileRow.querySelector(".upload-button").dataset.fileId = file.id;
 
       fileListContainer.appendChild(fileRow);
 
@@ -183,6 +184,43 @@ const deleteDraftFile = (fileId) => {
   debugger;
   state.draftFiles = state.draftFiles.filter((f) => f.id !== fileId);
   renderDraftFiles();
+};
+
+const startUpload = (btn) => {
+  const fileId = btn.dataset.fileId;
+  const file = state.draftFiles.find((f) => f.id === fileId);
+  if (!file) return;
+
+  const spinner = btn.closest(".file-row").querySelector(".spinner-container");
+  spinner.hidden = false;
+
+  btn.hidden = true;
+
+  uploadFile(fileId)
+    .then((data) => {
+      console.log("File uploaded successfully:", data);
+      spinner.hidden = true;
+      state.draftFiles = state.draftFiles.filter((f) => f.id !== fileId);
+      renderDraftFiles();
+    })
+    .catch((error) => {
+      console.error("Error uploading file:", error);
+      spinner.hidden = true;
+      btn.hidden = false;
+    });
+};
+
+const uploadFile = (fileId) => {
+  const file = state.draftFiles.find((f) => f.id === fileId);
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file.file);
+
+  return fetch(`/api/v1/files`, {
+    method: "POST",
+    body: formData,
+  });
 };
 
 const deleteFile = (fileId) => {
