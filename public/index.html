@@ -18,8 +18,7 @@
         class="upload-area"
         onclick="document.getElementById('fileInput').click()"
       >
-        Click to browse and upload files
-        <!-- Drag & Drop files here or click to browse -->
+        Drag & Drop files here or click to browse
         <input type="file" id="fileInput" hidden multiple />
       </div>
 
@@ -29,17 +28,16 @@
           <template id="download-file-row">
             <div class="file-row" data-file-id="id">
               <div class="file-info">
-                <div>📁</div>
-                <div>
+                <div class="file-icon">📁</div>
+                <div class="file-details">
                   <div class="file-name">Name</div>
                   <div class="file-size">Size</div>
                 </div>
+                <div class="progress-bar" hidden>
+                  <div class="progress" style="width: 75%"></div>
+                </div>
               </div>
               <div class="file-actions">
-                <div class="spinner-container" hidden>
-                  <div class="spinner"></div>
-                </div>
-
                 <button
                   data-file-id="id"
                   onclick="startUpload(this)"
@@ -65,6 +63,7 @@
                     </g>
                   </svg>
                 </button>
+
                 <button
                   class="delete-button"
                   data-file-id="id"

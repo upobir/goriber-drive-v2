@@ -27,13 +27,30 @@ const deleteFile = (fileId) => {
   });
 };
 
-const uploadFile = (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
+const uploadFile = (file, byteSentCallback) => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/v1/files");
 
-  return fetch(`/api/v1/files`, {
-    method: "POST",
-    body: formData,
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && byteSentCallback) {
+        byteSentCallback(event.loaded, event.total);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject(new Error(`Upload failed with status ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Upload error"));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    xhr.send(formData);
   });
 };
 

@@ -11,7 +11,8 @@ const newDraftFile = (file) => {
     name: file.name,
     size: file.size,
     file: file,
-    loading: false,
+    uploading: false,
+    uploadPercentage: 0,
   };
 };
 
@@ -86,11 +87,14 @@ const renderDraftFiles = () => {
       fileRow.querySelector(".upload-button").dataset.fileId = file.id;
 
       if (file.uploading) {
-        fileRow.querySelector(".spinner-container").hidden = false;
         fileRow.querySelector(".upload-button").hidden = true;
+        fileRow.querySelector(".progress-bar").hidden = false;
+        fileRow.querySelector(
+          ".progress"
+        ).style.width = `${file.uploadPercentage}%`;
       } else {
         fileRow.querySelector(".upload-button").hidden = false;
-        fileRow.querySelector(".spinner-container").hidden = true;
+        fileRow.querySelector(".progress-bar").hidden = true;
       }
 
       fileListContainer.appendChild(fileRow);
@@ -104,4 +108,23 @@ const renderDraftFiles = () => {
   }
 };
 
-export { state, renderFiles, renderDraftFiles, newDraftFile };
+const updateUploadProgress = (fileId) => {
+  const file = state.draftFiles.find((f) => f.id === fileId);
+  if (!file) return;
+
+  const fileRow = document.querySelector(`.file-row[data-file-id="${fileId}"]`);
+  if (!fileRow) return;
+
+  const progressBar = fileRow.querySelector(".progress");
+  if (!progressBar) return;
+
+  progressBar.style.width = `${file.uploadPercentage}%`;
+};
+
+export {
+  state,
+  renderFiles,
+  renderDraftFiles,
+  newDraftFile,
+  updateUploadProgress,
+};

@@ -3,6 +3,7 @@ import {
   renderFiles,
   renderDraftFiles,
   newDraftFile,
+  updateUploadProgress,
 } from "./render.js";
 import { setupSocket } from "./ws.js";
 import { fetchFiles, downloadFile, deleteFile, uploadFile } from "./api.js";
@@ -77,22 +78,38 @@ const deleteDraftFile = (fileId) => {
   renderDraftFiles();
 };
 
+const getUploadCallback = (fileId) => (sent, total) => {
+  const file = state.draftFiles.find((f) => f.id === fileId);
+  if (!file) return;
+  const oldPercentage = file.uploadPercentage;
+  const newPercentage = Math.floor((sent / total) * 100);
+  if (oldPercentage != newPercentage) {
+    file.uploadPercentage = newPercentage;
+    updateUploadProgress(fileId);
+  }
+};
+
 const startUpload = (btn) => {
   const fileId = btn.dataset.fileId;
   const file = state.draftFiles.find((f) => f.id === fileId);
   if (!file) return;
 
   file.uploading = true;
+  file.uploadPercentage = 0;
   renderDraftFiles();
 
-  uploadFile(file.file)
+  uploadFile(file.file, getUploadCallback(fileId))
     .then((data) => {
       console.log("File uploaded successfully:", data);
       state.draftFiles = state.draftFiles.filter((f) => f.id !== fileId);
     })
     .catch((error) => {
       console.error("Error uploading file:", error);
-      state.draftFiles.find((f) => f.id === fileId).uploading = false;
+      const file = state.draftFiles.find((f) => f.id === fileId);
+      if (file) {
+        file.uploading = false;
+        file.uploadPercentage = 0;
+      }
     })
     .finally(() => {
       renderDraftFiles();

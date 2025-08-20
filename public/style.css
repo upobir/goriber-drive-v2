@@ -84,7 +84,7 @@ header {
 
 .file-row {
   display: flex;
-  justify-content: space-between;
+  gap: 12px;
   align-items: center;
   padding: 12px;
   border-bottom: 1px solid #eee;
@@ -94,15 +94,44 @@ header {
   border-bottom: none;
 }
 
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .file-checkbox {
   transform: scale(1.2);
   cursor: pointer;
+}
+
+.file-info {
+  display: grid;
+  grid-template-columns: auto 1fr; /* icon | details */
+  grid-template-rows: auto auto; /* first row: icon+details, second row: progress */
+  gap: 8px 12px; /* row gap | col gap */
+  align-items: center;
+  flex: 1;
+}
+
+.file-icon {
+  grid-row: 1; /* stays in first row */
+  grid-column: 1;
+}
+
+.file-details {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.progress-bar {
+  grid-row: 2;
+  /* grid-column: 1 / -1; /* span across both columns */
+  grid-column: 2;
+  height: 6px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 4px;
 }
 
 .file-name {
