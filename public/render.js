@@ -11,6 +11,7 @@ const newDraftFile = (file) => {
     name: file.name,
     size: file.size,
     file: file,
+    loading: false,
   };
 };
 
@@ -83,6 +84,14 @@ const renderDraftFiles = () => {
       );
       fileRow.querySelector(".delete-button").dataset.fileId = file.id;
       fileRow.querySelector(".upload-button").dataset.fileId = file.id;
+
+      if (file.uploading) {
+        fileRow.querySelector(".spinner-container").hidden = false;
+        fileRow.querySelector(".upload-button").hidden = true;
+      } else {
+        fileRow.querySelector(".upload-button").hidden = false;
+        fileRow.querySelector(".spinner-container").hidden = true;
+      }
 
       fileListContainer.appendChild(fileRow);
 

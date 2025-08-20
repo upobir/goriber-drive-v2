@@ -29,6 +29,28 @@ document.getElementById("fileInput").addEventListener("change", () => {
   renderDraftFiles();
 });
 
+const uploadArea = document.querySelector(".upload-area");
+
+uploadArea.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  uploadArea.classList.add("drag-over");
+});
+
+uploadArea.addEventListener("dragleave", () => {
+  uploadArea.classList.remove("drag-over");
+});
+
+uploadArea.addEventListener("drop", (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove("drag-over");
+
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach((file) => {
+    state.draftFiles.push(newDraftFile(file));
+  });
+  renderDraftFiles();
+});
+
 const askDeleteConfirmation = (fileId) => {
   const modal = document.getElementById("delete-confirm-modal");
   const confirmButton = modal.querySelector(".confirm");
@@ -60,22 +82,20 @@ const startUpload = (btn) => {
   const file = state.draftFiles.find((f) => f.id === fileId);
   if (!file) return;
 
-  const spinner = btn.closest(".file-row").querySelector(".spinner-container");
-  spinner.hidden = false;
-
-  btn.hidden = true;
+  file.uploading = true;
+  renderDraftFiles();
 
   uploadFile(file.file)
     .then((data) => {
       console.log("File uploaded successfully:", data);
-      spinner.hidden = true;
       state.draftFiles = state.draftFiles.filter((f) => f.id !== fileId);
-      renderDraftFiles();
     })
     .catch((error) => {
       console.error("Error uploading file:", error);
-      spinner.hidden = true;
-      btn.hidden = false;
+      state.draftFiles.find((f) => f.id === fileId).uploading = false;
+    })
+    .finally(() => {
+      renderDraftFiles();
     });
 };
 
