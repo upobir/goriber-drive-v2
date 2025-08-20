@@ -129,9 +129,11 @@ func (h *Hub) Run(ctx context.Context) {
 			}
 			return
 		case c := <-h.register:
+			log.Println("new client registered")
 			h.clients[c] = struct{}{}
 		case c := <-h.unregister:
 			if _, ok := h.clients[c]; ok {
+				log.Println("client unregistered")
 				delete(h.clients, c)
 				c.close()
 			}

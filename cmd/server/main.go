@@ -24,8 +24,8 @@ const (
 	// defaultAddr  = ":3333"
 	publicDir    = "./public"
 	storageDir   = "./storage"
-	readTimeout  = 10 * time.Second
-	writeTimeout = 30 * time.Second
+	readTimeout  = 60 * time.Second
+	writeTimeout = 60 * time.Second
 	idleTimeout  = 60 * time.Second
 	dbUrl        = "file:data.db?_pragma=busy_timeout(5000)"
 )
